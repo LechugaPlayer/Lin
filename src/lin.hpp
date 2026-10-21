@@ -47,9 +47,9 @@ constexpr Color LightRed    = 0xFFFF6666;
 constexpr Color LightGreen  = 0xFF66FF66;
 constexpr Color LightBlue   = 0xFF6666FF;
 
-    void init(size_t width, size_t height, uint32_t* framebuffer);
+    void init(size_t width, size_t height);
     void shutdown();
-    void clear(uint32_t color);
+    void background(uint32_t color);
 
     void drawPixel(int x, int  y, uint32_t color);
     void drawLine(int srcX, int srcY, int desX, int des, uint32_t color);

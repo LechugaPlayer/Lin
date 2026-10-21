@@ -1,28 +1,37 @@
 #include "lin.hpp"
 #include <cstddef>
+#include <cstdlib>
 #include <stdlib.h>
 #include <algorithm>
 #include <cstdint>
 
-int lwidth;
-int lheight;
-uint32_t* buffer = nullptr;
+struct Canvas{
+  size_t width;
+  size_t height;
+  size_t stride;
+  uint32_t* framebuffer;  
+};
 
-void lin::init(size_t width, size_t height, uint32_t *framebuffer){
-  lwidth = width;
-  lheight = height;
-  buffer = framebuffer;
+static size_t WIDTH = 0;
+static size_t HEIGHT = 0;
+static uint32_t* PIXELS = nullptr;
+
+void lin::init(size_t width, size_t height){
+  PIXELS = (uint32_t*)malloc(width * height * sizeof(uint32_t));
+  WIDTH = width;
+  HEIGHT = height;
 }
-void lin::clear(uint32_t color){
-   for (int y = 0; y < lheight; y++) {
-     for (int x = 0; x < lwidth; x++) {
-       buffer[y * lwidth + x] = color;
+
+void lin::background(uint32_t color){
+   for (int y = 0; y < HEIGHT; y++) {
+     for (int x = 0; x < WIDTH; x++) {
+       PIXELS[y * WIDTH + x] = color;
      }
    } 
 }
 
 void lin::drawPixel(int x, int y, uint32_t color){
-    buffer[y * lwidth + x] = color;
+    PIXELS[y * WIDTH + x] = color;
 }
 
 void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
@@ -36,10 +45,11 @@ void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
   
   while (true) {
     
-    int offset = srcY * lwidth + srcX;
-    buffer[offset] = color;
-    
-    if (srcX == desX && srcY == desY) break;
+    int offset = srcY * WIDTH + srcX;
+    PIXELS[offset] = color;
+
+    //Checks if destiny has been reached or end of canvas
+    if ((srcX == desX && srcY == desY) || srcX >= WIDTH || srcY >= HEIGHT) break;
     int e2 = 2* err;
     if (e2 > -dy) {
       err -= dy;
