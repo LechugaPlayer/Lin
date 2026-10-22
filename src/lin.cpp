@@ -9,12 +9,17 @@ struct Canvas{
   size_t width;
   size_t height;
   size_t stride;
+  //later it should be unique pointer because is the only owner
   uint32_t* framebuffer;  
 };
 
 static size_t WIDTH = 0;
 static size_t HEIGHT = 0;
 static uint32_t* PIXELS = nullptr;
+
+uint32_t* lin::framebuffer(){
+  return PIXELS;
+}
 
 void lin::init(size_t width, size_t height){
   PIXELS = (uint32_t*)malloc(width * height * sizeof(uint32_t));
@@ -23,8 +28,8 @@ void lin::init(size_t width, size_t height){
 }
 
 void lin::background(uint32_t color){
-   for (int y = 0; y < HEIGHT; y++) {
-     for (int x = 0; x < WIDTH; x++) {
+   for (size_t y = 0; y < HEIGHT; y++) {
+     for (size_t x = 0; x < WIDTH; x++) {
        PIXELS[y * WIDTH + x] = color;
      }
    } 
@@ -48,8 +53,8 @@ void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
     int offset = srcY * WIDTH + srcX;
     PIXELS[offset] = color;
 
-    //Checks if destiny has been reached or end of canvas
-    if ((srcX == desX && srcY == desY) || srcX >= WIDTH || srcY >= HEIGHT) break;
+    
+    if ((srcX == desX && srcY == desY)) break;
     int e2 = 2* err;
     if (e2 > -dy) {
       err -= dy;

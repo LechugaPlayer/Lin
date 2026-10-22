@@ -1,9 +1,13 @@
 #include "lin.hpp"
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
+#include <deque>
 #include <vector>
+
+constexpr float DEG2RAD = 3.14159265 / 180.0f;
 
 struct Vec3{
     float x;
@@ -19,9 +23,9 @@ struct Vec2{
 constexpr int WIDTH = 600;
 constexpr int HEIGHT = 600;
 constexpr float f = 100;
-uint32_t* pixels = nullptr;
 
-bool writePPM( const char* path){
+
+bool writePPM( const char* path, uint32_t* pixels){
     FILE* file = std::fopen(path, "wb");
 
     if (!file) {
@@ -70,28 +74,7 @@ struct Mesh{
     std::vector<Vec3> vertices;
     std::vector<Edge> edges;
 
-void draw(Vec3 pos, uint32_t outline){
-    std::vector<Vec2> projectedVertices;
-    projectedVertices.reserve(this->vertices.size());
-    for (size_t i = 0; i < this->vertices.size(); i++) {
-        projectedVertices.emplace_back(project(Vec3sum(this->vertices[i], pos),f));
-    }
-    
-    std::vector<Vec2> rasterVertices;
-    rasterVertices.reserve(this->vertices.size());
-
-    for (size_t i = 0; i < this->vertices.size(); i++){
-        rasterVertices.emplace_back(rasterSpace(projectedVertices[i], WIDTH, HEIGHT));
-    }
-    
-    for (size_t i = 0; i < this->edges.size(); i++) {
-        Vec2 begin = rasterVertices[this->edges[i].a];
-        Vec2 end   = rasterVertices[this->edges[i].b];
-        lin::drawLine(begin.x, begin.y, end.x, end.y, outline);
-        }
-    }
-
-static Mesh makeCube(){
+static Mesh Cube(){
     //Front vertices
     Vec3 ver1 = {-50, -50, -50};
     Vec3 ver2 = {50, -50, -50};    
@@ -133,61 +116,127 @@ static Mesh makeCube(){
 }
 
 };
+struct Transform{
+    Vec3 pos = {0,0,0};
+    Vec3 rot = {0,0,0};
+    float scl = {1};
+};
+
+Vec3 rotateX(Vec3 v, float a){
+    float c = std::cos(a);
+    float s = std::sin(a);
+    return {v.x, v.y * c - v.z * s, v.y * s + v.z * c};
+}
+
+Vec3 rotateY(Vec3 v, float a){
+    float c = std::cos(a);
+    float s = std::sin(a);
+    return {v.x * c + v.z * s, v.y, -v.x * s + v.z *c};
+}
+
+Vec3 rotateZ(Vec3 v, float a){
+    float c = std::cos(a);
+    float s = std::sin(a);
+    return {v.x * c - v.y * s, v.x * s + v.y * c, v.z};
+}
+
+Vec3 rotate(const Vec3& v, const Vec3& r){
+    Vec3 result;
+    result = rotateX(v, r.x);
+    result = rotateY(result, r.y);
+    result = rotateZ(result, r.z);
+
+    return result;
+}
+//local to world
+Vec3 applyTransform(const Transform& t, Vec3 v){
+    Vec3 p { v.x * t.scl, v.y * t.scl, v.z * t.scl}; //scale
+    p = rotate(p, t.rot);                            //rotate
+    return Vec3sum(p, t.pos);                        //translate 
+}
 
 struct Instance{
-    //this means I cant' change the mesh pointer?
     const Mesh* mesh = nullptr;
-    Vec3 pos;
-    //          p y r  
-    Vec3 rot = {0,0,0};
-    float scl;
+    Transform xform;
+
+    void setMesh(const Mesh& m){ this->mesh = &m; }
+    void setMesh(const Mesh&&) = delete;
     
-    void setMesh(const Mesh& m){
-        this->mesh = &m;
+    void setPos(Vec3 p){
+        this->xform.pos = p;
     }
-    void translate(Vec3 pos){
-        
+    //X axis
+    void setPitch(float deg){
+        this->xform.rot.x = deg * DEG2RAD;
+    }
+    //Y axis
+    void setYaw(float deg){
+        this->xform.rot.y = deg * DEG2RAD;
+    }
+    //Z axis
+    void setRoll(float deg){
+        this->xform.rot.z = deg * DEG2RAD;
     }
 
-    void rotate(Vec3 rot){
-        
-    }
-
-    void scale(float scl){
-        
+    void setScale(float s){
+        this->xform.scl = s;
     }
 };
 
+void drawInstance(const Instance& inst, uint32_t outline){
+    if (!inst.mesh) return;
+    const Mesh& mesh = *inst.mesh;
+
+    std::vector<Vec2> screen;
+    screen.reserve(mesh.vertices.size());
+    for (size_t i = 0; i < mesh.vertices.size(); i++){
+        //Local to World here
+        Vec3 world = applyTransform(inst.xform, mesh.vertices[i]);
+        screen.emplace_back(rasterSpace(project(world, f), WIDTH, HEIGHT));
+    }
+
+    for (size_t i = 0; i < mesh.edges.size(); i++){
+        Vec2 begin = screen[mesh.edges[i].a];
+        Vec2 end   = screen[mesh.edges[i].b];
+        lin::drawLine((int)begin.x, (int)begin.y, (int)end.x, (int)end.y, outline);
+    }
+}
 struct Scene{
+  std::deque<Mesh> meshes;
   std::vector<Instance> instances;  
 };
 
 int main(){
-    pixels = (uint32_t*)malloc(WIDTH * HEIGHT * sizeof(uint32_t));
+    
     lin::init(WIDTH, HEIGHT);
+    uint32_t* pixels = lin::framebuffer();
 
-    Scene scene;
-
-    lin::background(lin::LightGray);    
-    Mesh Cube = Mesh::makeCube();
+    lin::background(lin::White);    
+    Mesh Cube = Mesh::Cube();
     Instance cube1;
     cube1.setMesh(Cube);
-    /*
-    cube.draw({WIDTH/2 - 101, HEIGHT/2 - 101, 99}, lin::Black);
-    
-    cube.draw({100, 100,100}, lin::Black);
-    cube.draw({-100, -100,100}, lin::Black);
-    cube.draw({100, -100,100}, lin::Black);
-    cube.draw({-100, 100,100}, lin::Black);
-
-    
-    cube.draw({0, 0,100}, lin::Black);
-    */
-
-    //position is located at a the bottom-lef
-    
+    cube1.setScale(0.50f);
+    cube1.setPos({90,0,100});
+    cube1.setPitch(30);
     
 
-        writePPM("Test.ppm");
+    Instance cube2;
+    cube2.setMesh(Cube);
+    cube2.setScale(0.50f);
+    cube2.setPos({-90,0,100});
+    cube2.setYaw(15);
+
+
+    Instance cube3;
+    cube3.setMesh(Cube);
+    cube3.setScale(0.50f);
+    cube3.setPos({0,0,100});
+    cube3.setRoll(30);
+    
+    drawInstance(cube1, lin::Black);
+    drawInstance(cube2, lin::Black);
+    drawInstance(cube3, lin::Black);
+    
+    writePPM("Test.ppm", pixels);
     return 0;
 }
