@@ -49,7 +49,8 @@ void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
 
   
   while (true) {
-    
+    //Check out of bounds
+    if(srcX < 0 || srcY < 0 || srcX >= (int)WIDTH || srcY >= (int)HEIGHT) break;
     int offset = srcY * WIDTH + srcX;
     PIXELS[offset] = color;
 
