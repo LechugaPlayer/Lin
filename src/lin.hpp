@@ -1,6 +1,10 @@
+#pragma once
+
 #include <cstddef>
 #include <cstdint>
 
+// TODO: Barycentric coordinates
+// TODO: Alpha blending
 namespace lin {
 using Color = uint32_t;
 
@@ -47,9 +51,8 @@ constexpr Color LightRed    = 0xFFFF6666;
 constexpr Color LightGreen  = 0xFF66FF66;
 constexpr Color LightBlue   = 0xFF6666FF;
 
-    void init(size_t width, size_t height);
-    void shutdown();
-    uint32_t* framebuffer();
+    void init(size_t width, size_t height, uint32_t* pixels);
+    void changeRes(size_t width, size_t height, uint32_t* pixels);
     void background(uint32_t color);
     
     void drawPixel(int x, int  y, uint32_t color);
@@ -63,6 +66,5 @@ constexpr Color LightBlue   = 0xFF6666FF;
     void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, uint32_t border, uint32_t body);
     void fillCircle(int centerX, int centerY, int radius, uint32_t color);
     void fillEllipse(int major, int minor, int centerX, int centerY, uint32_t color);
-    
     
 }

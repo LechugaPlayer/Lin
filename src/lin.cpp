@@ -5,24 +5,20 @@
 #include <algorithm>
 #include <cstdint>
 
-struct Canvas{
-  size_t width;
-  size_t height;
-  size_t stride;
-  //later it should be unique pointer because is the only owner
-  uint32_t* framebuffer;  
-};
+
 
 static size_t WIDTH = 0;
 static size_t HEIGHT = 0;
 static uint32_t* PIXELS = nullptr;
 
-uint32_t* lin::framebuffer(){
-  return PIXELS;
+void lin::init(size_t width, size_t height, uint32_t* pixels){
+  PIXELS = pixels;
+  WIDTH = width;
+  HEIGHT = height;
 }
 
-void lin::init(size_t width, size_t height){
-  PIXELS = (uint32_t*)malloc(width * height * sizeof(uint32_t));
+void lin::changeRes(size_t width, size_t height, uint32_t *pixels){
+  PIXELS = pixels;
   WIDTH = width;
   HEIGHT = height;
 }
@@ -40,6 +36,7 @@ void lin::drawPixel(int x, int y, uint32_t color){
 }
 
 void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
+  //TODO: Bounds checking is non existent 
 //bresenham's algorithm
   int dx = abs(desX - srcX);
   int dy = abs(desY - srcY);
