@@ -65,8 +65,8 @@ bool clipLeft(int& srcX, int& srcY, int& desX, int& desY) {
 
 bool clipRight(int& srcX, int& srcY, int& desX, int& desY) {
 
-    if (srcX >= WIDTH && desX >= WIDTH) return false;
-    if (srcX < WIDTH && desX < WIDTH) return true;
+    if (srcX >= (int) WIDTH && desX >=  (int)WIDTH) return false;
+    if (srcX < (int)WIDTH && desX <(int) WIDTH) return true;
 
     float dx = float(desX - srcX);
     float dy = float(desY - srcY);
@@ -74,7 +74,7 @@ bool clipRight(int& srcX, int& srcY, int& desX, int& desY) {
     float t = float((WIDTH - 1) - srcX) / dx;
     int intersectionY = std::round(srcY + t * dy);
 
-    if (srcX >= WIDTH) {
+    if (srcX >= (int)WIDTH) {
         srcX = WIDTH - 1;
         srcY = intersectionY;
     } else {
@@ -109,8 +109,8 @@ bool clipTop(int& srcX, int& srcY, int& desX, int& desY) {
 
 bool clipBot(int& srcX, int& srcY, int& desX, int& desY) {
 
-    if (srcY >= HEIGHT && desY >= HEIGHT) return false;
-    if (srcY < HEIGHT && desY < HEIGHT) return true;
+    if (srcY >= (int)HEIGHT && desY >= (int)HEIGHT) return false;
+    if (srcY < (int)HEIGHT && desY < (int)HEIGHT) return true;
 
     float dx = float(desX - srcX);
     float dy = float(desY - srcY);
@@ -118,7 +118,7 @@ bool clipBot(int& srcX, int& srcY, int& desX, int& desY) {
     float t = float((HEIGHT - 1) - srcY) / dy;
     int intersectionX = std::round(srcX + t * dx);
 
-    if (srcY >= HEIGHT) {
+    if (srcY >= (int)HEIGHT) {
         srcY = HEIGHT - 1;
         srcX = intersectionX;
     } else {
@@ -144,8 +144,10 @@ void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
   int sy = (srcY < desY) ? 1 : -1;
   int err = dx - dy;
 
-  
-  while (true) {  
+  //TODO:There's a cheap guard because clip still has some bugs and out of bounds vertices manage to get
+  // trough, with an underflow int
+  while (true) {
+    if (srcX < 0 || srcY < 0 || srcX >= (int)WIDTH || srcY >= (int)HEIGHT) break;
     int offset = srcY * WIDTH + srcX;
     PIXELS[offset] = color;
 

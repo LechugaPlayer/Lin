@@ -155,7 +155,7 @@ int main(){
     Instance teapot1;
     teapot1.setMesh(teapot);
     teapot1.setScale(59.0f);
-    teapot1.setPos({0,0,0});
+    teapot1.setPos({0,0,-100});
     
     
     drawInstance(teapot1, lin::Black);
