@@ -4,12 +4,18 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <cstdint>
-
+#include <utility>
+#include <cmath>
 
 
 static size_t WIDTH = 0;
 static size_t HEIGHT = 0;
 static uint32_t* PIXELS = nullptr;
+
+struct V2{
+  int x;
+  int y;
+};
 
 void lin::init(size_t width, size_t height, uint32_t* pixels){
   PIXELS = pixels;
@@ -35,9 +41,103 @@ void lin::drawPixel(int x, int y, uint32_t color){
     PIXELS[y * WIDTH + x] = color;
 }
 
+bool clipLeft(int& srcX, int& srcY, int& desX, int& desY) {
+
+    if (srcX < 0 && desX < 0) return false;
+    if (srcX >= 0 && desX >= 0) return true;
+
+    float dx = float(desX - srcX);
+    float dy = float(desY - srcY);
+
+    float t = float(-srcX) / dx;
+    int intersectionY = std::round(srcY + t * dy);
+
+    if (srcX < 0) {
+        srcX = 0;
+        srcY = intersectionY;
+    } else {
+        desX = 0;
+        desY = intersectionY;
+    }
+
+    return true;
+}
+
+bool clipRight(int& srcX, int& srcY, int& desX, int& desY) {
+
+    if (srcX >= WIDTH && desX >= WIDTH) return false;
+    if (srcX < WIDTH && desX < WIDTH) return true;
+
+    float dx = float(desX - srcX);
+    float dy = float(desY - srcY);
+
+    float t = float((WIDTH - 1) - srcX) / dx;
+    int intersectionY = std::round(srcY + t * dy);
+
+    if (srcX >= WIDTH) {
+        srcX = WIDTH - 1;
+        srcY = intersectionY;
+    } else {
+        desX = WIDTH - 1;
+        desY = intersectionY;
+    }
+
+    return true;
+}
+
+bool clipTop(int& srcX, int& srcY, int& desX, int& desY) {
+
+    if (srcY < 0 && desY < 0) return false;
+    if (srcY >= 0 && desY >= 0) return true;
+
+    float dx = float(desX - srcX);
+    float dy = float(desY - srcY);
+
+    float t = float(-srcY) / dy;
+    int intersectionX = std::round(srcX + t * dx);
+
+    if (srcY < 0) {
+        srcY = 0;
+        srcX = intersectionX;
+    } else {
+        desY = 0;
+        desX = intersectionX;
+    }
+
+    return true;
+}
+
+bool clipBot(int& srcX, int& srcY, int& desX, int& desY) {
+
+    if (srcY >= HEIGHT && desY >= HEIGHT) return false;
+    if (srcY < HEIGHT && desY < HEIGHT) return true;
+
+    float dx = float(desX - srcX);
+    float dy = float(desY - srcY);
+
+    float t = float((HEIGHT - 1) - srcY) / dy;
+    int intersectionX = std::round(srcX + t * dx);
+
+    if (srcY >= HEIGHT) {
+        srcY = HEIGHT - 1;
+        srcX = intersectionX;
+    } else {
+        desY = HEIGHT - 1;
+        desX = intersectionX;
+    }
+
+    return true;
+}
 void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
-  //TODO: Bounds checking is non existent 
-//bresenham's algorithm
+
+  
+    if(!clipLeft (srcX,srcY,desX,desY)) return;
+    if(!clipRight(srcX,srcY,desX,desY)) return;
+    if(!clipTop  (srcX,srcY,desX,desY)) return;
+    if(!clipBot  (srcX,srcY,desX,desY)) return;
+    
+
+  //bresenham's algorithm
   int dx = abs(desX - srcX);
   int dy = abs(desY - srcY);
   int sx = (srcX < desX) ? 1 : -1;
@@ -45,9 +145,7 @@ void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
   int err = dx - dy;
 
   
-  while (true) {
-    //Check out of bounds
-    if(srcX < 0 || srcY < 0 || srcX >= (int)WIDTH || srcY >= (int)HEIGHT) break;
+  while (true) {  
     int offset = srcY * WIDTH + srcX;
     PIXELS[offset] = color;
 

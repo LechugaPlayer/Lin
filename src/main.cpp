@@ -16,7 +16,7 @@ struct Vec2{
 
 constexpr int WIDTH = 1920;
 constexpr int HEIGHT = 1080;
-constexpr float f = 150;
+constexpr float f = -150;
 
 
 bool writePPM( const char* path, uint32_t* pixels){
@@ -146,21 +146,19 @@ void drawInstance(const Instance& inst, uint32_t outline){
 }
 
 int main(){
-    
-    lin::init(WIDTH, HEIGHT);
-    uint32_t* pixels = lin::framebuffer();
+    uint32_t* pixels = (uint32_t*) malloc(WIDTH * HEIGHT * sizeof(uint32_t));
+    lin::init(WIDTH, HEIGHT, pixels);
 
     lin::background(lin::White);
     
     Mesh teapot = Mesh::UtahTeapot();
     Instance teapot1;
     teapot1.setMesh(teapot);
-    teapot1.setScale(55.0f);
-    teapot1.setPos({0,-70,200});
-    teapot1.setYaw(90);
+    teapot1.setScale(59.0f);
+    teapot1.setPos({0,0,0});
+    
     
     drawInstance(teapot1, lin::Black);
-    
     
     writePPM("Test.ppm", pixels);
     return 0;
