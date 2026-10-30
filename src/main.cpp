@@ -14,8 +14,8 @@ struct Vec2{
   float y;  
 };
 
-constexpr int WIDTH = 1920;
-constexpr int HEIGHT = 1080;
+constexpr int WIDTH = 1600;
+constexpr int HEIGHT = 1200;
 constexpr float f = -150;
 
 
@@ -46,13 +46,19 @@ bool writePPM( const char* path, uint32_t* pixels){
 
     return true;
 }
-
+//(0,0) to (w,h)
 Vec2 project(Vec3 v, float f){
+    //TODO:Think how to handle division by zero
     return {f * (v.x/v.z), f * (v.y/v.z)};
 }
 
+//(-1,1) to (1,-1)
+Vec2 NDCSpace(Vec2 v, int width, int height){   
+    return {((2 * v.x)/width), ((2 * v.y)/height)};
+}
+
 Vec2 rasterSpace(Vec2 v, int width, int height){
-    return {v.x + ((float)width/2), -v.y + ((float)height/2)};
+    return { ((v.x +1)* ((float)width/2)), (1- v.y) * ((float)height/2)};
 }
 
 Vec3 Vec3sum(Vec3 lhs, Vec3 rhs){
@@ -135,7 +141,7 @@ void drawInstance(const Instance& inst, uint32_t outline){
     for (size_t i = 0; i < mesh.vertices.size(); i++){
         //Local to World here
         Vec3 world = applyTransform(inst.xform, mesh.vertices[i]);
-        screen.emplace_back(rasterSpace(project(world, f), WIDTH, HEIGHT));
+        screen.emplace_back(rasterSpace(NDCSpace(project(world,f), WIDTH, HEIGHT), WIDTH, HEIGHT));
     }
 
     for (size_t i = 0; i < mesh.edges.size(); i++){
@@ -154,9 +160,11 @@ int main(){
     Mesh teapot = Mesh::UtahTeapot();
     Instance teapot1;
     teapot1.setMesh(teapot);
-    teapot1.setScale(59.0f);
-    teapot1.setPos({0,0,-100});
-    
+    teapot1.setScale(30.0f);
+    teapot1.setPos({0,-20,80});
+    teapot1.setPitch(90);
+    teapot1.setRoll(90);
+    teapot1.setYaw(90);
     
     drawInstance(teapot1, lin::Black);
     

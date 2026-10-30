@@ -43,7 +43,7 @@ void lin::drawPixel(int x, int y, uint32_t color){
 
 bool clipLeft(int& srcX, int& srcY, int& desX, int& desY) {
 
-    if (srcX < 0 && desX < 0) return false;
+    if (srcX <  0 && desX <  0) return false;
     if (srcX >= 0 && desX >= 0) return true;
 
     float dx = float(desX - srcX);
@@ -65,8 +65,8 @@ bool clipLeft(int& srcX, int& srcY, int& desX, int& desY) {
 
 bool clipRight(int& srcX, int& srcY, int& desX, int& desY) {
 
-    if (srcX >= (int) WIDTH && desX >=  (int)WIDTH) return false;
-    if (srcX < (int)WIDTH && desX <(int) WIDTH) return true;
+    if (srcX >= (int)WIDTH && desX >= (int)WIDTH) return false;
+    if (srcX <  (int)WIDTH && desX <  (int)WIDTH) return true;
 
     float dx = float(desX - srcX);
     float dy = float(desY - srcY);
@@ -87,7 +87,7 @@ bool clipRight(int& srcX, int& srcY, int& desX, int& desY) {
 
 bool clipTop(int& srcX, int& srcY, int& desX, int& desY) {
 
-    if (srcY < 0 && desY < 0) return false;
+    if (srcY <  0 && desY <  0) return false;
     if (srcY >= 0 && desY >= 0) return true;
 
     float dx = float(desX - srcX);
@@ -110,7 +110,7 @@ bool clipTop(int& srcX, int& srcY, int& desX, int& desY) {
 bool clipBot(int& srcX, int& srcY, int& desX, int& desY) {
 
     if (srcY >= (int)HEIGHT && desY >= (int)HEIGHT) return false;
-    if (srcY < (int)HEIGHT && desY < (int)HEIGHT) return true;
+    if (srcY <  (int)HEIGHT && desY <  (int)HEIGHT) return true;
 
     float dx = float(desX - srcX);
     float dy = float(desY - srcY);
